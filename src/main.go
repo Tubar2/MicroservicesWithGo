@@ -48,8 +48,8 @@ func main() {
 	signal.Notify(c, os.Kill)
 
 	sig := <-c
-	l.Println("Received terminate, graceful shutdown", sig)
+	l.Printf("Received %v signal, graceful shutdown", sig)
 
-	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	s.Shutdown(tc)
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	s.Shutdown(ctx)
 }

@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"BuildingMicroservicesWithGo_NicJackson/src/handlers"
 )
 
@@ -15,12 +17,21 @@ func main() {
 
 	l := log.New(os.Stdout, "product-api", log.LstdFlags)
 
-	//Creating handlers
+	// creating handlers
 	ph := handlers.NewProducts(l)
 
-	//Creating new server mux and regisering the handlrs
-	sm := http.NewServeMux()
-	sm.Handle("/", ph)
+	//	creating new server mux and regisering the handlrs
+	sm := mux.NewRouter()
+
+	// creating subrouters
+	getRouter := sm.Methods("GET").Subrouter()
+	putRouter := sm.Methods("PUT").Subrouter()
+	postRouter := sm.Methods("POST").Subrouter()
+
+	// registering operations
+	getRouter.HandleFunc("/", ph.GetProducts)
+	putRouter.HandleFunc("/{id:[0-9]+}", ph.PutProduct)
+	postRouter.HandleFunc("/", ph.PostProduct)
 
 	//Creating server object
 	s := &http.Server{

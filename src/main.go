@@ -24,16 +24,20 @@ func main() {
 	sm := mux.NewRouter()
 
 	// creating subrouters
-	getRouter := sm.Methods("GET").Subrouter()
-	putRouter := sm.Methods("PUT").Subrouter()
-	postRouter := sm.Methods("POST").Subrouter()
+	getRouter := sm.Methods(http.MethodGet).Subrouter()
+	putRouter := sm.Methods(http.MethodPut).Subrouter()
+	postRouter := sm.Methods(http.MethodPost).Subrouter()
 
 	// registering operations
 	getRouter.HandleFunc("/", ph.GetProducts)
-	putRouter.HandleFunc("/{id:[0-9]+}", ph.PutProduct)
-	postRouter.HandleFunc("/", ph.PostProduct)
 
-	//Creating server object
+	putRouter.HandleFunc("/{id:[0-9]+}", ph.PutProduct)
+	putRouter.Use(ph.MiddlewareValidateProduct)
+
+	postRouter.HandleFunc("/", ph.PostProduct)
+	postRouter.Use(ph.MiddlewareValidateProduct)
+
+	// creating server object
 	s := &http.Server{
 		Addr:         "localhost:9090",
 		Handler:      sm,
@@ -42,7 +46,7 @@ func main() {
 		WriteTimeout: 1 * time.Second,
 	}
 
-	//Starting the server
+	// starting the server
 	go func() {
 		l.Println("Starting server on port :9090")
 

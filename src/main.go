@@ -12,14 +12,17 @@ import (
 )
 
 func main() {
+
 	l := log.New(os.Stdout, "product-api", log.LstdFlags)
-	hh := handlers.NewHello(l)
-	gh := handlers.NewGoodbye(l)
 
+	//Creating handlers
+	ph := handlers.NewProducts(l)
+
+	//Creating new server mux and regisering the handlrs
 	sm := http.NewServeMux()
-	sm.Handle("/", hh)
-	sm.Handle("/goodbye", gh)
+	sm.Handle("/", ph)
 
+	//Creating server object
 	s := &http.Server{
 		Addr:         "localhost:9090",
 		Handler:      sm,
@@ -28,18 +31,23 @@ func main() {
 		WriteTimeout: 1 * time.Second,
 	}
 
+	//Starting the server
 	go func() {
+		l.Println("Starting server on port :9090")
+
 		err := s.ListenAndServe()
 		if err != nil {
-			l.Fatal(err)
+			l.Printf("Error starting server: %s\n", err)
+			os.Exit(1)
 		}
 	}()
 
-	sigChan := make(chan os.Signal)
-	signal.Notify(sigChan, os.Interrupt)
-	signal.Notify(sigChan, os.Kill)
+	//Trapping sigterm or interrupt and gracefully shutting down server
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, os.Kill)
 
-	sig := <-sigChan
+	sig := <-c
 	l.Println("Received terminate, graceful shutdown", sig)
 
 	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
